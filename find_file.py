@@ -4,7 +4,7 @@ import os
 
 class SearchFile:
     """ПАНЕЛЬ УПРАВЛЕНИЯ"""
-    def __init__(self, files_list, keyword, function='да'):
+    def __init__(self, files_list=None, keyword=None, function='да'):
         self.files_list = files_list
         self.keyword = keyword
         self.function = function
@@ -16,6 +16,23 @@ class SearchFile:
             found_word = [wr for wr in keyword if wr in content]
             print(f'В файле {os.path.basename(filename)} нашел такие слова из вашего списка: {found_word}\n')
 
+    async def search_all_word(self, filename, keyword):
+        try:
+            with open(filename, 'r', encoding='utf-8') as fl:
+                try:
+                    content = fl.read()
+                    print(f'{keyword} ++++')
+                    found_word = [wr for wr in keyword if wr in content]
+
+                    if len(found_word) != 0:
+                        text = f'В файле {filename} нашел такие слова из вашего списка: {found_word}\n'
+                        print(f'\033[91m{text}\033[0m')
+                    else:
+                        print('EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRRRRORRRREEEEEEEEEE')
+                except Exception as e:
+                    print(f'Ошибка: {e}')
+        except PermissionError:
+            print('Чет с правами')
     async def find_file(self):
         for root, dirs, files in os.walk('C:\\'):
             for file in files:
@@ -27,7 +44,10 @@ class SearchFile:
                             path = os.path.join(root, file)
                             await self.search_word(path, self.keyword)
                     case 'нет':
-                        pass
+                        print('Ищу слова в файлах по система: ')
+                        path = os.path.join(root, file)
+                        await self.search_all_word(path, self.keyword)
+
 
 
 class PanelControl:
@@ -38,7 +58,7 @@ class PanelControl:
 
     async def findFileText(self, fileLName, fileTList):
         files_list = fileLName         #tes_ai_1.txt, tes_ai_2.txt, план работы.txt
-        keyword = fileTList          #Привет, васапа, таск1, таск2
+        keyword = fileTList          #Привет васапа таск1 таск2
         tasks = []
 
 
@@ -47,15 +67,21 @@ class PanelControl:
 
         await asyncio.gather(*tasks)
 
-    async def findOsText(self, fileLName, fileTList, function):
-        print('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
+    async def findOsText(self, fileTList, function):
+        keyword = fileTList
+        tasks = []
+
+        searchFile = SearchFile(keyword=keyword, function=function)
+        tasks.append(searchFile.find_file())
+
+        await asyncio.gather(*tasks)
 
     async def input_name_file(self, function='да'):
         match function:
             case 'да':
                 await self.findFileText(self.fileListName, self.fileListText)
             case 'нет':
-                await self.findOsText(self.fileListName, self.fileListText, function)
+                await self.findOsText(self.fileListText, function)
 
 
 
@@ -85,7 +111,7 @@ if __name__ == '__main__':
                 lTextFile = inTextFile.split(' ')
                 print(lTextFile)
 
-                pContrl = PanelControl(lTextFile)
-                asyncio.run(pContrl.input_name_file(function='нет'))
+                pContrl = PanelControl(fileListText=lTextFile)
+                asyncio.run(pContrl.input_name_file('нет'))
 
 
